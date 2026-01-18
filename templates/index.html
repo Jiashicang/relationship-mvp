@@ -1,0 +1,134 @@
+html
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>关系驾驶舱 - 向上管理AI顾问</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto px-4 py-8 max-w-4xl">
+        <!-- 头部 -->
+        <div class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 mb-2">
+                🚀 关系驾驶舱 MVP
+            </h1>
+            <p class="text-gray-600">用AI生成你的向上管理战略报告</p>
+        </div>
+
+        <!-- 表单 -->
+        <div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+            <h2 class="text-xl font-bold mb-4">📝 输入关系场景</h2>
+            <form id="relationshipForm">
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium mb-2">关系对象是谁？</label>
+                        <input type="text" name="target_person" required 
+                               placeholder="例如：技术总监张总"
+                               class="w-full p-3 border rounded-lg">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium mb-2">你的角色？</label>
+                        <input type="text" name="my_role" required
+                               placeholder="例如：高级产品经理"
+                               class="w-full p-3 border rounded-lg">
+                    </div>
+                    <button type="submit" 
+                            class="w-full bg-blue-500 text-white py-3 rounded-lg font-medium">
+                        🚀 生成关系分析报告
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- 报告显示区域 -->
+        <div id="report" class="hidden bg-white rounded-xl shadow-lg p-6">
+            <h2 class="text-xl font-bold mb-4">📊 关系驾驶舱报告</h2>
+            <div id="reportContent"></div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mt-6">
+            <p class="text-sm text-blue-800">
+                💡 <strong>内测说明：</strong> 每天限用3次。报告由AI生成，仅供参考。
+            </p>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('relationshipForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                target_person: e.target.target_person.value,
+                my_role: e.target.my_role.value,
+                current_state: '一般',
+                desired_goal: '建立更好的工作关系',
+                specific_context: ''
+            };
+            
+            const button = e.target.querySelector('button');
+            button.disabled = true;
+            button.textContent = '生成中...';
+            
+            try {
+                const response = await fetch('/analyze', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                // 显示报告
+                const reportDiv = document.getElementById('report');
+                const contentDiv = document.getElementById('reportContent');
+                
+                let html = `
+                    <div class="space-y-4">
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <h3 class="font-bold text-lg mb-2">📋 报告摘要</h3>
+                            <p><strong>核心诊断：</strong>${data.报告摘要?.核心诊断 || '无'}</p>
+                            <p><strong>机会窗口：</strong>${data.报告摘要?.机会窗口 || '无'}</p>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">🔍 三维度分析</h3>
+                            <div class="grid md:grid-cols-2 gap-4">
+                                <div class="bg-gray-50 p-4 rounded">
+                                    <h4 class="font-bold mb-2">专业维度</h4>
+                                    <p><strong>优势：</strong>${(data.三维度分析?.专业维度?.优势 || []).join(', ')}</p>
+                                </div>
+                                <div class="bg-gray-50 p-4 rounded">
+                                    <h4 class="font-bold mb-2">人际维度</h4>
+                                    <p><strong>沟通风格：</strong>${data.三维度分析?.人际维度?.沟通风格适配 || '无'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div>
+                            <h3 class="font-bold text-lg mb-2">📅 行动计划</h3>
+                            ${(data.行动计划 || []).map(item => `
+                                <div class="border-l-4 border-blue-500 pl-4 mb-3">
+                                    <p><strong>${Object.keys(item)[0]}：</strong>${Object.values(item)[0]}</p>
+                                    <p class="text-sm text-gray-600">目标：${item.目标 || '无'}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                contentDiv.innerHTML = html;
+                reportDiv.classList.remove('hidden');
+                
+            } catch (error) {
+                alert('生成报告失败：' + error.message);
+            } finally {
+                button.disabled = false;
+                button.textContent = '🚀 生成关系分析报告';
+            }
+        });
+    </script>
+</body>
+</html>
